@@ -45,6 +45,8 @@ CameraInput::CameraInput(int w, int h, VID_FORMATS format, int fps, bool discard
 	// GOOD ONE FOR FLYCAP!
 	//bool result = vidGrabber.initGrabber( camWidth, camHeight, VID_FORMAT_GREYSCALE, VID_FORMAT_GREYSCALE, 60, true, sdk);
 	
+	warp = false;
+	
 	bool result = vidGrabber.initGrabber( camWidth, camHeight, format, format, fps, useTexture, sdk);
 
 	if(result) {
@@ -79,9 +81,11 @@ CameraInput::CameraInput(int w, int h, VID_FORMATS format, int fps, bool discard
 		readSettings();
 		
 		processingPanel.setXMLFilename("processingSettings.xml");
+		warpingPanel.setXMLFilename("warpingSettings.xml");
 		setupGUIEvents();
 		setupUI();
 		processingPanel.reloadSettings();
+		warpingPanel.reloadSettings();
 		
 	} else {
 	    ofLog(OF_LOG_FATAL_ERROR,"Camera failed to initialize.");
@@ -107,11 +111,19 @@ void CameraInput::update(){
         calculateCaptureFramerate();
 		camImage->setFromPixels( vidGrabber.getPixels(), camWidth, camHeight );
 
-		if (camFormat == VID_FORMAT_RGB)
-			grayImage = rgbImage;
+		if (camFormat == VID_FORMAT_RGB){
+			if (warp)
+				grayImage = rgbImage;
+			else
+				grayWarpImage = rgbImage;
+		}
 		
-		if (camFormat == VID_FORMAT_GREYSCALE)
-			grayWarpImage.warpIntoMe( grayImage, warper.dstPoints , warper.srcPoints);
+		if (camFormat == VID_FORMAT_GREYSCALE){
+			if (warp)
+				grayWarpImage.warpIntoMe( grayImage, warper.dstPoints , warper.srcPoints);
+			else
+				grayWarpImage = grayImage;
+		}
 		
 		//now grayWarpImage has the image
 		
@@ -150,6 +162,11 @@ void CameraInput::update(){
 	if (uiState == SET_PROCESSING_SETTINGS){
 		processingPanel.update();
 	}
+	
+	if (uiState == SET_IMAGE_WARP){
+		warpingPanel.update();
+	}
+
 }
 
 
@@ -159,7 +176,7 @@ void CameraInput::setupUI(){
 	processingPanel.loadFont("LiberationMono-Regular.ttf", 10);
     processingPanel.addPanel("Settings", 2, false);
 	processingPanel.setWhichPanel("Settings");
-    processingPanel.setWhichColumn(0);
+	processingPanel.setWhichColumn(0);
 
     /* set the gui callback */
     callback.SetCallback( this, &CameraInput::parameterCallback);
@@ -175,6 +192,12 @@ void CameraInput::setupUI(){
 	
 	processingPanel.addButtonSlider("Erode", "erode" , 0, 0, 8, true, &callback,UI_ERODE);
 	processingPanel.addButtonSlider("Dilate", "dilate" , 0, 0, 8, true, &callback,UI_DILATE);
+	
+	warpingPanel.setup("Image Crop / Warp Settings", camWidth * 1.5f, 0, 350, 200);
+	warpingPanel.loadFont("LiberationMono-Regular.ttf", 10);
+    warpingPanel.addPanel("Settings", 2, false);
+	warpingPanel.setWhichColumn(0);
+	warpingPanel.addToggle("Calc Image Warp", "warpEnable", false, &callback, UI_WARP_ENABLE);
 }
 
 
@@ -225,7 +248,9 @@ void CameraInput::draw(){
 			camImage->draw(0,0);
 			grayWarpImage.draw(camWidth, 0.f, tw, th );
 			
-			warper.draw();
+			if (warp)
+				warper.draw();
+			warpingPanel.draw();
 
 			ofSetColor(0xffffff);
 			ofDrawBitmapString( "w: write settings   r: read settings", 20, ofGetHeight() - 20);
@@ -266,6 +291,7 @@ void CameraInput::calculateCaptureFramerate(){
     myframes++;
 }
 
+
 void CameraInput::setupGUIEvents(){	
     ofAddListener(ofEvents.mousePressed, this, &CameraInput::mousePressed);
     ofAddListener(ofEvents.mouseDragged, this, &CameraInput::mouseDragged);
@@ -275,18 +301,27 @@ void CameraInput::setupGUIEvents(){
 
 
 void CameraInput::mousePressed(ofMouseEventArgs & args){
-	if (uiState == SET_IMAGE_WARP) warper.mousePressed(args.x, args.y);
+	if (uiState == SET_IMAGE_WARP){ 
+		warper.mousePressed(args.x, args.y);
+		warpingPanel.mousePressed(args.x,args.y,args.button);
+	}
     if (uiState == SET_PROCESSING_SETTINGS) processingPanel.mousePressed(args.x,args.y,args.button);
 }
 
 void CameraInput::mouseDragged(ofMouseEventArgs & args){
-	if (uiState == SET_IMAGE_WARP) warper.mouseDragged(args.x, args.y);
+	if (uiState == SET_IMAGE_WARP){ 
+		warper.mouseDragged(args.x, args.y);
+		warpingPanel.mouseDragged(args.x,args.y,args.button);
+	}
 	if (uiState == SET_PROCESSING_SETTINGS) processingPanel.mouseDragged(args.x,args.y,args.button);
 }
 
 
 void CameraInput::mouseReleased(ofMouseEventArgs & args){
-	if (uiState == SET_IMAGE_WARP) warper.mouseReleased();
+	if (uiState == SET_IMAGE_WARP){ 
+		warper.mouseReleased();
+		warpingPanel.mouseReleased();
+	}
 	if (uiState == SET_PROCESSING_SETTINGS) processingPanel.mouseReleased();
 }
 
@@ -343,6 +378,9 @@ void CameraInput::parameterCallback(float param1, float param2, int param_mode, 
 
 		case UI_DILATE:
 			numDilations = (int)param1; break;
+
+		case UI_WARP_ENABLE:
+			warp = (bool)param_mode; break;
 
 		default:
 			break;

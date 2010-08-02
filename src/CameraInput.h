@@ -33,6 +33,7 @@
 #define		UI_ERODE					1006
 #define		UI_DILATE					1007
 
+#define		UI_WARP_ENABLE				1008
 class CameraInput {
 
 	public:
@@ -44,7 +45,7 @@ class CameraInput {
 			SET_IMAGE_WARP
 		};
 	
-		CameraInput(int w, int h, VID_FORMATS format, int fps, bool discardFrames = true, bool useTexture = true, bool mode7 = false, uint deviceID = 0, bool verbose = false );
+		CameraInput(int w, int h, VID_FORMATS format, int fps, bool discardFrames = true, bool useTexture = true, bool mode7 = false, uint deviceID = 0, bool verbose = true );
 		~CameraInput();
 		void update();
 		void draw();
@@ -58,6 +59,9 @@ class CameraInput {
 		ofxCvGrayscaleImage*	getGrayCamImage(){ return &grayImage; }
 		ofxCvGrayscaleImage*	getWarpedCamImage(){ return &grayWarpImage; }
 		ofxCvGrayscaleImage*	getThresholdedImage(){ return &binaryImage; }
+	
+		void calculateWarpedImage(bool doIt){ warp = doIt; }
+		
 	
 	private:
 
@@ -91,6 +95,7 @@ class CameraInput {
 		VID_FORMATS					camFormat;
 
 		ofxControlPanel				processingPanel;
+		ofxControlPanel				warpingPanel;
 	
 		ofxCvImage *				camImage;
 		
@@ -115,6 +120,7 @@ class CameraInput {
 		//int							bgSubtractionCutOff;
 	
 		bool						invert;
+		bool						warp;
 	
 		int							numErosions;
 		int							numDilations;

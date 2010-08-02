@@ -21,6 +21,7 @@ void testApp::setup(){
 							 false,		//use texture
 							 true		//mode7	(needed to get 320 x 240 from the firefly MV)
 							 );	
+	
 }
 
 //--------------------------------------------------------------
@@ -33,7 +34,8 @@ void testApp::update(){
 void testApp::draw(){
 	
 	ofSetColor(0xffffff);
-	cam->getWarpedCamImage()->draw(0, 0, ofGetWidth(), ofGetHeight());	
+	if ( cam->getWarpedCamImage() != NULL )
+		cam->getWarpedCamImage()->draw(0, 0, ofGetWidth(), ofGetHeight());	
 	cam->draw();	//UI and suff
 }
 
