@@ -14,12 +14,12 @@ void testApp::setup(){
 	ofSetFrameRate(60);
 	ofSetVerticalSync(true);
 															
-	cam = new CameraInput(320, 240, 
-							 VID_FORMAT_GREYSCALE, 
+	cam = new CameraInput(640, 480, 
+							 VID_FORMAT_RGB, 
 							 70, 
 							 true,		//discard frames
 							 false,		//use texture
-							 true		//mode7	(needed to get 320 x 240 from the firefly MV)
+							 false		//mode7	(needed to get 320 x 240 from the firefly MV)
 							 );	
 	
 }

@@ -47,7 +47,7 @@ class CameraInput {
 	
 		CameraInput(int w, int h, VID_FORMATS format, int fps, bool discardFrames = true, bool useTexture = true, bool mode7 = false, uint deviceID = 0, bool verbose = true );
 		~CameraInput();
-		void update();
+		bool update();	//returns yes if frame is new
 		void draw();
 
 		void mousePressed(ofMouseEventArgs & args);

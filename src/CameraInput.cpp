@@ -105,8 +105,9 @@ CameraInput::~CameraInput(){
 void CameraInput::update(){
 
 	vidGrabber.update();
-		
-	if (vidGrabber.isFrameNew()){
+	
+	bool newFrame = vidGrabber.isFrameNew()
+	if (newFrame){
 		
         calculateCaptureFramerate();
 		camImage->setFromPixels( vidGrabber.getPixels(), camWidth, camHeight );
@@ -166,6 +167,8 @@ void CameraInput::update(){
 	if (uiState == SET_IMAGE_WARP){
 		warpingPanel.update();
 	}
+	
+	return newFrame;
 
 }
 
