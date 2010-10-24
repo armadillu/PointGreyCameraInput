@@ -102,11 +102,11 @@ CameraInput::~CameraInput(){
 
 
 //--------------------------------------------------------------
-void CameraInput::update(){
+bool CameraInput::update(){
 
 	vidGrabber.update();
 	
-	bool newFrame = vidGrabber.isFrameNew()
+	bool newFrame = vidGrabber.isFrameNew();
 	if (newFrame){
 		
         calculateCaptureFramerate();
